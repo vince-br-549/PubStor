@@ -1,0 +1,13 @@
+CreateTable.sql  - file needed to create your own postgresql table
+main.cpp	
+mainwindow.cpp
+mainwindow.h
+mainwindow.ui
+MANIFEST	- this file
+PubStor.pro
+PubStor.pro.user
+README.build	- how to create the  Makefile needed to create an executiable 
+README.MD	
+
+I've omitted some generated files from this list.
+
