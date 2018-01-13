@@ -1,11 +1,11 @@
-A QT Use the postgresql database to manipulate a book shelf.
+A QT project with the postgresql database to manipulate a book shelf.
 
 I got this initially from:
 
 https://apparatusd.wordpress.com/2010/09/08/simple-qt4-and-postgresql-book-catalog-application/
 
-The spent time fixing what seemed to be not working.
-Probably because my versions are much newer than the oneused on the web page.
+Then spent time fixing what seemed to be not working.
+Probably because my versions are much newer than the one used on the web page.
 
 Existing Issues not limited to:
 
@@ -14,7 +14,12 @@ o	the search window only works once.
 
 o	I think the add window also only works once.  needs more work
 	
+Todo:
+o	Add ability to seup and save the users own data base connection
 
-Comments welcome
+
+
+Help and Comments welcome
+
 
 

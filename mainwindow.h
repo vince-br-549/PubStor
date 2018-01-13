@@ -23,8 +23,6 @@ private slots:
     void clearpub();
     void searchpub();
 
-    //void on_searchButton_clicked();
-
 protected:
     void changeEvent(QEvent *e);
     bool openDB();

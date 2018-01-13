@@ -1,5 +1,6 @@
 --
--- PostgreSQL database dump
+-- PostgreSQL database dump using psql 9.2.23 
+-- on a Centos 7.4 system
 --
 
 SET statement_timeout = 0;
@@ -64,9 +65,6 @@ ALTER TABLE ONLY shelf ALTER COLUMN id SET DEFAULT nextval('shelf_id_seq'::regcl
 
 COPY shelf (id, title, author, publisher, isbn, genre) FROM stdin;
 1	Book1	Vince	none	1	fiction
-2	 Book2	Vince	vince	1	None 
-3	 Book3	Vince	vince		 
-4	 BookG	Joe	vince	0	none 
 \.
 
 

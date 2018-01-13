@@ -27,6 +27,9 @@ void MainWindow::changeEvent(QEvent *e)
     }
 }
 
+
+
+
 bool MainWindow::openDB()
 {
     db  = (QSqlDatabase::addDatabase("QPSQL"));
@@ -108,12 +111,12 @@ void MainWindow::searchpub()
     {
 
         if( !que.exec(findr) )
-         {
-             QMessageBox mb;
-             mb.setText(que.lastError().text());
-//             mb.setWindowIcon(QIcon("icon.png"));
-             mb.exec();
-         }
+        {
+            QMessageBox mb;
+            mb.setText(que.lastError().text());
+            //             mb.setWindowIcon(QIcon("icon.png"));
+            mb.exec();
+        }
 
         while (que.next()) {
             myresults = true;
@@ -129,7 +132,7 @@ void MainWindow::searchpub()
             ui->textEdit->clear();  // do i need this ?
             ui->textEdit->setText(out);
         }
-/*
+        /*
         if( que.next() )
         {
             out = que.value(0).toString();  out +="\n";
