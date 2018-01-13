@@ -1,0 +1,17 @@
+QT seems to want build information separate from the main project.
+So here is an example of how you can make your own build folder....
+
+I didn't include the output from the qmake but it was happy and created everything  needed including the executiable.
+
+$ cd
+$ cd /tmp
+$ mkdir poo
+$ cd poo
+$ qmake-qt5 $HOME/QT/PubStor/PubStor.pro
+$ ls
+Makefile
+$ make
+
+.
+.
+.
