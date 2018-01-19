@@ -24,13 +24,13 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>Search</string>
      </attribute>
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="searchResults">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -230,7 +230,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="layoutWidget1">
       <property name="geometry">
        <rect>
         <x>101</x>
@@ -320,8 +320,8 @@
      <y>132</y>
     </hint>
     <hint type="destinationlabel">
-     <x>591</x>
-     <y>92</y>
+     <x>495</x>
+     <y>227</y>
     </hint>
    </hints>
   </connection>

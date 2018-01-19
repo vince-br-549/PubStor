@@ -1,3 +1,8 @@
+Until I get it to have a setup file you will need to edit mainwindow.h
+and change the values for HostName, DatabaseName, UserName, and table name.
+
+
+
 QT seems to want build information separate from the main project.
 So here is an example of how you can make your own build folder....
 

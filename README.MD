@@ -9,14 +9,19 @@ Probably because my versions are much newer than the one used on the web page.
 
 Existing Issues not limited to:
 
+:x
+
+Todo:
+
+o	Add ability to seup and save the users own data base connection
+
+
+Fixed:
+
 o	the search window only works once. 
 	I think I need to add an additional trigger.
 
 o	I think the add window also only works once.  needs more work
-	
-Todo:
-o	Add ability to seup and save the users own data base connection
-
 
 
 Help and Comments welcome

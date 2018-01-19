@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+bool SillySwitch = false;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -45,8 +46,7 @@ bool MainWindow::openDB()
 
 void MainWindow::addpub()
 {
-
-    QString args = "INSERT INTO shelf(title,author,publisher,isbn,genre) VALUES (' ";;
+    QString args = "INSERT INTO shelf(title,author,publisher,isbn,genre) VALUES (' ";
     bool ret = false;
     bool lck = false;
 
@@ -59,6 +59,8 @@ void MainWindow::addpub()
     if(!db.isOpen())
     {
         lck = MainWindow::openDB();
+    } else {
+        lck = true;
     }
 
     ui->result->setText("Pub insertion starting");
@@ -87,12 +89,19 @@ void MainWindow::clearpub()
 }
 
 void MainWindow::searchpub()
+//void MainWindow::on_searchButton_clicked()
 {
     bool ret = false;
+
+    ui->searchResults->clear(); // clear previous output
+
 
     if(!db.isOpen())
     {
         ret = MainWindow::openDB();
+    }
+    else {
+        ret = true;
     }
 
     QString out;
@@ -101,7 +110,7 @@ void MainWindow::searchpub()
 
     bool myresults = false;
 
-    findr = "select title,author,isbn,genre,publisher FROM shelf WHERE ";
+    findr = "SELECT title,author,isbn,genre,publisher FROM shelf WHERE ";
     findr += ui->srcq->currentText();
     findr += " LIKE '%";
     findr += ui->search->text();
@@ -109,6 +118,18 @@ void MainWindow::searchpub()
 
     if (ret)
     {
+
+/*
+        if (SillySwitch) {
+            SillySwitch = false;
+            QMessageBox::information(this,"SillySwitch","True");
+        } else {
+            SillySwitch = true;
+            QMessageBox::information(this,"SillySwitch","False");
+        }
+*/
+
+
 
         if( !que.exec(findr) )
         {
@@ -129,25 +150,14 @@ void MainWindow::searchpub()
             out += "\n";
         }
         if ( myresults ) {
-            ui->textEdit->clear();  // do i need this ?
-            ui->textEdit->setText(out);
+            ui->searchResults->setText(out);
         }
-        /*
-        if( que.next() )
-        {
-            out = que.value(0).toString();  out +="\n";
-            out.append(que.value(1).toString());    out +="\n";
-            out.append(que.value(2).toString());    out +="\n";
-            out.append(que.value(3).toString());    out +="\n";
-            out.append(que.value(4).toString());    out +="\n";
-            ui->textEdit->setText(out);
-        }
-        */
+
         else
         {
-            ui->textEdit->setText("No result found " +findr );
+            ui->searchResults->setText("No result found " +findr );
         }
+        ui->search->clear();  // clear input
 
     }
 }
-
