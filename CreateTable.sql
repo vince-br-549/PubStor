@@ -1,6 +1,5 @@
 --
--- PostgreSQL database dump using psql 9.2.23 
--- on a Centos 7.4 system
+-- PostgreSQL database dump
 --
 
 SET statement_timeout = 0;
@@ -20,7 +19,7 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE shelf (
-    id integer NOT NULL,
+    bookid integer NOT NULL,
     title character varying(200),
     author character varying(200),
     publisher character varying(200),
@@ -49,21 +48,21 @@ ALTER TABLE public.shelf_id_seq OWNER TO vince;
 -- Name: shelf_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: vince
 --
 
-ALTER SEQUENCE shelf_id_seq OWNED BY shelf.id;
+ALTER SEQUENCE shelf_id_seq OWNED BY shelf.bookid;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: vince
+-- Name: bookid; Type: DEFAULT; Schema: public; Owner: vince
 --
 
-ALTER TABLE ONLY shelf ALTER COLUMN id SET DEFAULT nextval('shelf_id_seq'::regclass);
+ALTER TABLE ONLY shelf ALTER COLUMN bookid SET DEFAULT nextval('shelf_id_seq'::regclass);
 
 
 --
 -- Data for Name: shelf; Type: TABLE DATA; Schema: public; Owner: vince
 --
 
-COPY shelf (id, title, author, publisher, isbn, genre) FROM stdin;
+COPY shelf (bookid, title, author, publisher, isbn, genre) FROM stdin;
 1	Book1	Vince	none	1	fiction
 \.
 
@@ -72,7 +71,7 @@ COPY shelf (id, title, author, publisher, isbn, genre) FROM stdin;
 -- Name: shelf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: vince
 --
 
-SELECT pg_catalog.setval('shelf_id_seq', 4, true);
+SELECT pg_catalog.setval('shelf_id_seq', 7, true);
 
 
 --

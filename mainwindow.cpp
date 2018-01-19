@@ -33,13 +33,17 @@ void MainWindow::changeEvent(QEvent *e)
 
 bool MainWindow::openDB()
 {
+
+    if (!QSqlDatabase::drivers().contains("QPSQL"))
+        QMessageBox::critical(this, "Unable to load database", "This demo needs the QPSQL driver");
+
     db  = (QSqlDatabase::addDatabase("QPSQL"));
     db.setHostName("localhost");
     db.setDatabaseName("vince");
     db.setUserName("vince");
     bool ret = db.open();
     if ( ! ret ) {
-        QMessageBox::warning(this,"PubStor","DB open failed " + db.lastError().text()  );
+        QMessageBox::critical(this,"PubStor","DB open failed " + db.lastError().text()  );
     }
     return ret;
 }
@@ -54,7 +58,13 @@ void MainWindow::addpub()
     args.append(ui->author->text()); args.append("','");
     args.append(ui->publisher->text()); args.append("','");
     args.append(ui->isbn->text()); args.append("','");
-    args.append(ui->genre->text()); args.append( " '); ");
+    args.append(ui->genre->text()); args.append( " ') ");
+
+    args.append(ui->genre->text()); args.append( "returning bookid");
+
+
+    args.append(ui->genre->text()); args.append( "; ");
+
 
     if(!db.isOpen())
     {
@@ -70,6 +80,9 @@ void MainWindow::addpub()
         QSqlQuery query;
         ret = query.exec(args);
 
+        QString returnID = QSqlResult::hasOutValues();
+
+        QMessageBox::information(this,"inser results",returnID);
         if(ret)
         {
             ui->result->setText("Pub has been inserted");
