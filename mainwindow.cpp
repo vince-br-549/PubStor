@@ -47,7 +47,6 @@ bool MainWindow::openDB()
         QMessageBox::critical(this, "Unable to load database", "This demo needs the QPSQL driver");
 
     db  = (QSqlDatabase::addDatabase("QPSQL"));
-//    db.setHostName("localhost");
     db.setHostName(MYHost);
 
 
@@ -62,56 +61,73 @@ bool MainWindow::openDB()
 
 void MainWindow::addpub()
 {
-    QString args = "INSERT INTO ";
-    args.append(MYTable);
-    args.append("(title,author,publisher,isbn,genre) VALUES ('");
     bool ret = false;
     bool lck = true;
 
+    QString args = "INSERT INTO ";
+    args.append(MYTable);
+    args.append("(title,author,publisher,isbn,genre) VALUES ('");
     args.append(ui->title->text()); args.append("','");
     args.append(ui->author->text()); args.append("','");
     args.append(ui->publisher->text()); args.append("','");
     args.append(ui->isbn->text()); args.append("','");
     args.append(ui->genre->text()); args.append( " ') ");
-
     args.append(ui->genre->text()); args.append( "returning bookid");
-
-
     args.append(ui->genre->text()); args.append( "; ");
-
-
     if(!db.isOpen())
     {
         lck = MainWindow::openDB();
     }
 
-    ui->result->setText("Pub insertion starting");
     if( lck )
     {
         ui->result->setText("Pub is being inserted");
         QSqlQuery query;
+        query.addBindValue("sth");
+
         ret = query.exec(args);
 
-        if(ret)
+        if(!ret)
         {
-            ui->result->setText("record inserted OK");
-/*
- * the following bullshit returns the record number
- */
-
-        query.first();  // returns bool
-        QSqlRecord a = query.record(); // get the returning row of result.
-
-
-        int  resultInt  = a.field("bookid").value().toInt(); // ask for the field value by name.
-        char result[6];
-        sprintf(result,"%d",resultInt); // convert it into a string
-
-        QMessageBox::information(this,"returning book Id ",result);
-        }
-        else {
             QMessageBox::information(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
+            return;
         }
+            ui->result->setText("record inserted OK");
+
+            /*
+             * this returns the results of the  'returning' phrase
+
+
+            QString lastid = query.lastInsertId().toString();
+            qWarning() << "got another version " << lastid;
+             */
+
+
+            /*
+             * the following bullshit returns the record number
+            */
+            //while (query.next()) {
+            query.first();
+            QString what = query.value(0).toString();
+                qWarning() << "got " + what ;
+                QMessageBox::information(this,"returning book Id Method 0",what);
+            //}
+
+
+            /*
+             * this also returns the inserted record number.
+
+
+            query.first();  // returns bool
+            QSqlRecord a = query.record(); // get the returning row of result.
+
+
+            int  resultInt  = a.field("bookid").value().toInt(); // ask for the field value by name.
+            char result[6];
+            sprintf(result,"%d",resultInt); // convert it into a string
+
+            QMessageBox::information(this,"returning book Id Method 1",result);
+            */
     }
 }
 
@@ -131,31 +147,40 @@ void MainWindow::searchpub()
     bool ret = true;
 
     ui->searchResults->clear(); // clear previous output
-
-
     if(!db.isOpen())
     {
         ret = MainWindow::openDB();
     }
 
-    QString out;
-    QString findr;
+    if ( ! ret ) {
+        // it did not open successfully
+        return;
+    }
+
+    QString searchOutputLine;
+    QString searchSQLString;
     QSqlQuery que;
 
-    bool myresults = false;
+    bool searchAnswersFound = false;
 
-    findr = "SELECT title,author,isbn,genre,publisher FROM ";
-    findr += MYTable;
-    findr += " WHERE ";
-    findr += ui->srcq->currentText();
-    findr += " LIKE '%";
-    findr += ui->search->text();
-    findr += "%' ;";
 
-    if (ret)
-    {
+    /*
+     * build the search string
+     */
+    searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
+//    searchSQLString = "SELECT * FROM ";
 
-/*
+    searchSQLString += MYTable;
+    searchSQLString += " WHERE ";
+    searchSQLString += ui->srcq->currentText();
+    searchSQLString += " LIKE '%";
+    searchSQLString += ui->search->text();
+    searchSQLString += "%' ;";
+
+
+    qWarning() <<"this is your  last qWarning :)";
+
+    /*
         if (SillySwitch) {
             SillySwitch = false;
             QMessageBox::information(this,"SillySwitch","True");
@@ -165,34 +190,40 @@ void MainWindow::searchpub()
         }
 */
 
+    /*
+     * now do the search
+     */
+    if( !que.exec(searchSQLString) )
+    {
+        QMessageBox mb;
+        mb.setText("DB search failed with \"" + que.lastError().text() + "\"");
+        //             mb.setWindowIcon(QIcon("icon.png"));
+        mb.exec();
+        return;     // no sense in continuing.
+    }
 
 
-        if( !que.exec(findr) )
-        {
-            QMessageBox mb;
-            mb.setText(que.lastError().text());
-            //             mb.setWindowIcon(QIcon("icon.png"));
-            mb.exec();
-        }
+    /*
+     * loop thru the results building an output block, there could be many.
+     */
+    while (que.next()) {
+        searchAnswersFound = true;
+        searchOutputLine.append(que.value(0).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(que.value(1).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(que.value(2).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(que.value(3).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(que.value(4).toString());    searchOutputLine +=", ";
+        searchOutputLine += "\n";
+    }
 
-        while (que.next()) {
-            myresults = true;
-            out.append(que.value(0).toString());    out +=", ";
-            out.append(que.value(1).toString());    out +=", ";
-            out.append(que.value(2).toString());    out +=", ";
-            out.append(que.value(3).toString());    out +=", ";
-            out.append(que.value(4).toString());    out +=", ";
-            out += "\n";
-        }
-        if ( myresults ) {
-            ui->searchResults->setText(out);
-        }
-
-        else
-        {
-            ui->searchResults->setText("No result found " +findr );
-        }
-        ui->search->clear();  // clear input
+    if ( searchAnswersFound ) {
+        ui->searchResults->setText(searchOutputLine);
+//        ui->search->clear();  // clear input
 
     }
+    else
+    {
+        ui->searchResults->setText("Nothing found." );
+    }
+
 }
