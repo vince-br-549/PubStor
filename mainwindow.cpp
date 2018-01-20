@@ -51,8 +51,8 @@ bool MainWindow::openDB()
     db.setHostName(MYHost);
 
 
-    db.setDatabaseName("vince");
-    db.setUserName("vince");
+    db.setDatabaseName(MYDB);
+    db.setUserName(MYUserName);
     bool ret = db.open();
     if ( ! ret ) {
         QMessageBox::critical(this,"PubStor","DB open failed " + db.lastError().text()  );
@@ -91,37 +91,28 @@ void MainWindow::addpub()
         ui->result->setText("Pub is being inserted");
         QSqlQuery query;
         ret = query.exec(args);
-/*
- * try query.fetch() to get the inserted record number
- * then record to get the full inserrted record.
- *
-       QSqlResult a=query.result();
-        a.fetchFirst();
-        QSqlRecord b = a.record();
 
-
-        QMessageBox::information(this,"record results",recordNumber);
-
-        QString returningID = query.record.field("bookid");
-        QMessageBox::information(this,"the returned Record ID",returningID);
-
-        */
-
-           query.first();  // returns bool
-        QSqlRecord a = query.record();
-
-
-        QString  result = a.field("bookid").value().toString();
-        QMessageBox::information(this,"results",result);
-
-
-        QMessageBox::information(this,"insert results","Success");
         if(ret)
         {
-            ui->result->setText("Pub has been inserted");
+            ui->result->setText("record inserted OK");
+/*
+ * the following bullshit returns the record number
+ */
+
+        query.first();  // returns bool
+        QSqlRecord a = query.record(); // get the returning row of result.
+
+
+        int  resultInt  = a.field("bookid").value().toInt(); // ask for the field value by name.
+        char result[6];
+        sprintf(result,"%d",resultInt); // convert it into a string
+
+        QMessageBox::information(this,"returning book Id ",result);
+        }
+        else {
+            QMessageBox::information(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
         }
     }
-
 }
 
 void MainWindow::clearpub()
@@ -191,7 +182,6 @@ void MainWindow::searchpub()
             out.append(que.value(2).toString());    out +=", ";
             out.append(que.value(3).toString());    out +=", ";
             out.append(que.value(4).toString());    out +=", ";
-//            out.append(que.value(5).toString());  //  out +=", ";
             out += "\n";
         }
         if ( myresults ) {
