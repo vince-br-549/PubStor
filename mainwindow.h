@@ -8,6 +8,7 @@
 #include <QtSql>
 #include <QSqlError>
 #include <QMessageBox>
+#include <QSqlResult>
 
 namespace Ui {
     class MainWindow;

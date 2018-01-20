@@ -3,6 +3,15 @@
 
 bool SillySwitch = false;
 
+QString MYHost = "localhost";
+QString MYDB = "vince";
+QString MYUserName = "vince";
+QString MYTable = "shelf";
+QString MYPassword = "";
+bool SSL = false;
+
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -38,7 +47,10 @@ bool MainWindow::openDB()
         QMessageBox::critical(this, "Unable to load database", "This demo needs the QPSQL driver");
 
     db  = (QSqlDatabase::addDatabase("QPSQL"));
-    db.setHostName("localhost");
+//    db.setHostName("localhost");
+    db.setHostName(MYHost);
+
+
     db.setDatabaseName("vince");
     db.setUserName("vince");
     bool ret = db.open();
@@ -50,9 +62,11 @@ bool MainWindow::openDB()
 
 void MainWindow::addpub()
 {
-    QString args = "INSERT INTO shelf(title,author,publisher,isbn,genre) VALUES (' ";
+    QString args = "INSERT INTO ";
+    args.append(MYTable);
+    args.append("(title,author,publisher,isbn,genre) VALUES ('");
     bool ret = false;
-    bool lck = false;
+    bool lck = true;
 
     args.append(ui->title->text()); args.append("','");
     args.append(ui->author->text()); args.append("','");
@@ -69,8 +83,6 @@ void MainWindow::addpub()
     if(!db.isOpen())
     {
         lck = MainWindow::openDB();
-    } else {
-        lck = true;
     }
 
     ui->result->setText("Pub insertion starting");
@@ -79,10 +91,31 @@ void MainWindow::addpub()
         ui->result->setText("Pub is being inserted");
         QSqlQuery query;
         ret = query.exec(args);
+/*
+ * try query.fetch() to get the inserted record number
+ * then record to get the full inserrted record.
+ *
+       QSqlResult a=query.result();
+        a.fetchFirst();
+        QSqlRecord b = a.record();
 
-        QString returnID = QSqlResult::hasOutValues();
 
-        QMessageBox::information(this,"inser results",returnID);
+        QMessageBox::information(this,"record results",recordNumber);
+
+        QString returningID = query.record.field("bookid");
+        QMessageBox::information(this,"the returned Record ID",returningID);
+
+        */
+
+           query.first();  // returns bool
+        QSqlRecord a = query.record();
+
+
+        QString  result = a.field("bookid").value().toString();
+        QMessageBox::information(this,"results",result);
+
+
+        QMessageBox::information(this,"insert results","Success");
         if(ret)
         {
             ui->result->setText("Pub has been inserted");
@@ -104,7 +137,7 @@ void MainWindow::clearpub()
 void MainWindow::searchpub()
 //void MainWindow::on_searchButton_clicked()
 {
-    bool ret = false;
+    bool ret = true;
 
     ui->searchResults->clear(); // clear previous output
 
@@ -113,9 +146,6 @@ void MainWindow::searchpub()
     {
         ret = MainWindow::openDB();
     }
-    else {
-        ret = true;
-    }
 
     QString out;
     QString findr;
@@ -123,7 +153,9 @@ void MainWindow::searchpub()
 
     bool myresults = false;
 
-    findr = "SELECT title,author,isbn,genre,publisher FROM shelf WHERE ";
+    findr = "SELECT title,author,isbn,genre,publisher FROM ";
+    findr += MYTable;
+    findr += " WHERE ";
     findr += ui->srcq->currentText();
     findr += " LIKE '%";
     findr += ui->search->text();
@@ -159,7 +191,7 @@ void MainWindow::searchpub()
             out.append(que.value(2).toString());    out +=", ";
             out.append(que.value(3).toString());    out +=", ";
             out.append(que.value(4).toString());    out +=", ";
-            out.append(que.value(5).toString());  //  out +=", ";
+//            out.append(que.value(5).toString());  //  out +=", ";
             out += "\n";
         }
         if ( myresults ) {
