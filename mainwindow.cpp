@@ -11,13 +11,50 @@ QString MYPassword = "";
 bool SSL = false;
 
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+/*
+ * build a list of genre for the  combo box
+ */
+    QStringList genreList=(QStringList()
+                           << "Action and Adventure"
+                           << "Anthology"
+                           << "Art"
+                           << "Autobiographies"
+                           << "Biographies"
+                           << "Children's"
+                           << "Comics"
+                           << "Cookbooks"
+                           << "Diaries"
+                           << "Dictionaries"
+                           << "Drama"
+                           << "Encyclopedias"
+                           << "Fantasy"
+                           << "Guide"
+                           << "Health"
+                           << "History"
+                           << "Horror"
+                           << "Journals"
+                           << "Math"
+                           << "Mystery"
+                           << "Poetry"
+                           << "Prayer books"
+                           << "Religion, Spirituality & New Age"
+                           << "Romance"
+                           << "Satire"
+                           << "Science"
+                           << "Science fiction"
+                           << "Self help"
+                           << "Series"
+                           << "Travel"
+                           << "Trilogy"
+                           );
+    ui->comboBox->addItems(genreList);
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -38,18 +75,14 @@ void MainWindow::changeEvent(QEvent *e)
 }
 
 
-
-
 bool MainWindow::openDB()
 {
-
     if (!QSqlDatabase::drivers().contains("QPSQL"))
-        QMessageBox::critical(this, "Unable to load database", "This demo needs the QPSQL driver");
+        QMessageBox::critical(this, "Unable to load database", "The QPSQL driver is required");
 
     db  = (QSqlDatabase::addDatabase("QPSQL"));
+
     db.setHostName(MYHost);
-
-
     db.setDatabaseName(MYDB);
     db.setUserName(MYUserName);
     bool ret = db.open();
@@ -64,16 +97,6 @@ void MainWindow::addpub()
     bool ret = false;
     bool lck = true;
 
-    QString args = "INSERT INTO ";
-    args.append(MYTable);
-    args.append("(title,author,publisher,isbn,genre) VALUES ('");
-    args.append(ui->title->text()); args.append("','");
-    args.append(ui->author->text()); args.append("','");
-    args.append(ui->publisher->text()); args.append("','");
-    args.append(ui->isbn->text()); args.append("','");
-    args.append(ui->genre->text()); args.append( " ') ");
-    args.append(ui->genre->text()); args.append( "returning bookid");
-    args.append(ui->genre->text()); args.append( "; ");
     if(!db.isOpen())
     {
         lck = MainWindow::openDB();
@@ -81,20 +104,33 @@ void MainWindow::addpub()
 
     if( lck )
     {
-        ui->result->setText("Pub is being inserted");
         QSqlQuery query;
-        query.addBindValue("sth");
+        QString args = "INSERT INTO ";
+        args.append(MYTable);
+        args.append("(title,author,publisher,isbn,genre) VALUES (?,?,?,?,?) RETURNING bookid;");
+        query.prepare(args);
 
-        ret = query.exec(args);
+        query.addBindValue(ui->title->text());
+        query.addBindValue(ui->author->text());
+        query.addBindValue(ui->publisher->text());
+        query.addBindValue(ui->isbn->text());
+        query.addBindValue(ui->comboBox->currentText());
+
+        ui->result->setText("Pub is being inserted");  // probably only of use if very poor response time.
+
+
+        ret = query.exec();
 
         if(!ret)
         {
-            QMessageBox::information(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
+            QMessageBox::critical(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
+
+//            QMessageBox::information(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
             return;
         }
-            ui->result->setText("record inserted OK");
+        ui->result->setText("record inserted OK");
 
-            /*
+        /*
              * this returns the results of the  'returning' phrase
 
 
@@ -103,33 +139,17 @@ void MainWindow::addpub()
              */
 
 
-            /*
-             * the following bullshit returns the record number
-            */
-            //while (query.next()) {
-            query.first();
-            QString what = query.value(0).toString();
-                qWarning() << "got " + what ;
-                QMessageBox::information(this,"returning book Id Method 0",what);
-            //}
+        /*
+         * the following bullshit returns the record number
+         */
 
-
-            /*
-             * this also returns the inserted record number.
-
-
-            query.first();  // returns bool
-            QSqlRecord a = query.record(); // get the returning row of result.
-
-
-            int  resultInt  = a.field("bookid").value().toInt(); // ask for the field value by name.
-            char result[6];
-            sprintf(result,"%d",resultInt); // convert it into a string
-
-            QMessageBox::information(this,"returning book Id Method 1",result);
-            */
+        query.first();  // query.next() also works.
+        QString what = query.value(0).toString();
+        qWarning() << "got " + what ;
+        QMessageBox::information(this,"returning book Id Method 0",what);
     }
 }
+
 
 void MainWindow::clearpub()
 {
@@ -137,15 +157,13 @@ void MainWindow::clearpub()
     ui->isbn->clear();
     ui->publisher->clear();
     ui->title->clear();
-    ui->genre->clear();
     ui->result->clear();
 }
 
+
 void MainWindow::searchpub()
-//void MainWindow::on_searchButton_clicked()
 {
     bool ret = true;
-
     ui->searchResults->clear(); // clear previous output
     if(!db.isOpen())
     {
@@ -159,7 +177,7 @@ void MainWindow::searchpub()
 
     QString searchOutputLine;
     QString searchSQLString;
-    QSqlQuery que;
+    QSqlQuery query;
 
     bool searchAnswersFound = false;
 
@@ -168,35 +186,44 @@ void MainWindow::searchpub()
      * build the search string
      */
     searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
-//    searchSQLString = "SELECT * FROM ";
-
     searchSQLString += MYTable;
     searchSQLString += " WHERE ";
     searchSQLString += ui->srcq->currentText();
-    searchSQLString += " LIKE '%";
+    searchSQLString += " LIKE '";
     searchSQLString += ui->search->text();
-    searchSQLString += "%' ;";
+    searchSQLString += "%'";
+
+    //    searchSQLString += " like % ;"; // syntax error.
+    //    searchSQLString += " LIKE  %:what% ;";  // gives error
+    //    searchSQLString += " LIKE  '%:what%' ;";  // Fails to find anything.
+    //searchSQLString += " ILIKE  '%:what%' ;";  // Fails to find anything.
+    //    searchSQLString += " ILIKE  '%?%' ;";  // using addBindValue Fails to find anything
+    //    searchSQLString += " ILIKE  %?% ;";  // using addBindValue syntax error.
 
 
-    qWarning() <<"this is your  last qWarning :)";
+    //searchSQLString += " = :what ;";  //  Works.
 
-    /*
-        if (SillySwitch) {
-            SillySwitch = false;
-            QMessageBox::information(this,"SillySwitch","True");
-        } else {
-            SillySwitch = true;
-            QMessageBox::information(this,"SillySwitch","False");
-        }
-*/
+
+
+
+    //    qWarning() <<"this is your  last qWarning :)";
+
 
     /*
      * now do the search
      */
-    if( !que.exec(searchSQLString) )
+
+    QMessageBox mb;
+    //    mb.setText(searchSQLString);
+    //    mb.exec();
+
+    query.prepare(searchSQLString);
+    query.addBindValue(ui->search->text());
+
+
+    if( !query.exec() )
     {
-        QMessageBox mb;
-        mb.setText("DB search failed with \"" + que.lastError().text() + "\"");
+        mb.setText("DB search failed with \"" + query.lastError().text() + "\" the search string was \"" + searchSQLString + "\"");
         //             mb.setWindowIcon(QIcon("icon.png"));
         mb.exec();
         return;     // no sense in continuing.
@@ -206,19 +233,19 @@ void MainWindow::searchpub()
     /*
      * loop thru the results building an output block, there could be many.
      */
-    while (que.next()) {
+    while (query.next()) {
         searchAnswersFound = true;
-        searchOutputLine.append(que.value(0).toString());    searchOutputLine +=", ";
-        searchOutputLine.append(que.value(1).toString());    searchOutputLine +=", ";
-        searchOutputLine.append(que.value(2).toString());    searchOutputLine +=", ";
-        searchOutputLine.append(que.value(3).toString());    searchOutputLine +=", ";
-        searchOutputLine.append(que.value(4).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(query.value(0).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(query.value(1).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(query.value(2).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(query.value(3).toString());    searchOutputLine +=", ";
+        searchOutputLine.append(query.value(4).toString());    searchOutputLine +=", ";
         searchOutputLine += "\n";
     }
 
     if ( searchAnswersFound ) {
         ui->searchResults->setText(searchOutputLine);
-//        ui->search->clear();  // clear input
+        //        ui->search->clear();  // clear input
 
     }
     else

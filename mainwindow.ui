@@ -157,7 +157,7 @@
      <widget class="QLabel" name="label_4">
       <property name="geometry">
        <rect>
-        <x>269</x>
+        <x>310</x>
         <y>150</y>
         <width>38</width>
         <height>16</height>
@@ -167,22 +167,12 @@
        <string>Genre</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="genre">
-      <property name="geometry">
-       <rect>
-        <x>313</x>
-        <y>149</y>
-        <width>191</width>
-        <height>23</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_6">
       <property name="geometry">
        <rect>
         <x>30</x>
         <y>149</y>
-        <width>28</width>
+        <width>41</width>
         <height>16</height>
        </rect>
       </property>
@@ -238,6 +228,12 @@
         <height>23</height>
        </rect>
       </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>Insert Results</string>
+      </property>
      </widget>
      <widget class="QWidget" name="layoutWidget1">
       <property name="geometry">
@@ -260,6 +256,28 @@
        </item>
       </layout>
      </widget>
+     <widget class="QComboBox" name="comboBox">
+      <property name="geometry">
+       <rect>
+        <x>360</x>
+        <y>150</y>
+        <width>141</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string extracomment="Genre"/>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>
@@ -272,6 +290,13 @@
      <height>20</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSettings"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="sizePolicy">
@@ -288,6 +313,11 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
