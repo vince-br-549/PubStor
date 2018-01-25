@@ -9,6 +9,12 @@ I sent a comment about some of the problems I found.
 Then spent time fixing what seemed to be not working.
 Probably because my versions are much newer than the one used on the web page.
 
+
+Latest updates:
+
+	Added a settings tab to eventually load and save a config file.
+
+
 Existing Issues not limited to:
 
 ?

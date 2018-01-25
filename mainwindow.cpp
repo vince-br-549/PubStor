@@ -1,7 +1,8 @@
+#include <iostream>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-bool SillySwitch = false;
 
 QString MYHost = "localhost";
 QString MYDB = "vince";
@@ -85,6 +86,13 @@ bool MainWindow::openDB()
     db.setHostName(MYHost);
     db.setDatabaseName(MYDB);
     db.setUserName(MYUserName);
+    db.setPassword(MYPassword);
+
+
+    if ( SSL ) {
+     db.setConnectOptions("requiressl=yes");
+    }
+
     bool ret = db.open();
     if ( ! ret ) {
         QMessageBox::critical(this,"PubStor","DB open failed " + db.lastError().text()  );
@@ -185,7 +193,14 @@ void MainWindow::searchpub()
     /*
      * build the search string
      */
-    searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
+    if ("localhost" != MYHost) {
+        searchSQLString = "SELECT * FROM ";
+    }
+    else {
+       searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
+
+    }
+
     searchSQLString += MYTable;
     searchSQLString += " WHERE ";
     searchSQLString += ui->srcq->currentText();
@@ -253,4 +268,80 @@ void MainWindow::searchpub()
         ui->searchResults->setText("Nothing found." );
     }
 
+}
+
+
+void MainWindow::settings(){
+
+}
+
+
+/*
+ * Inialize the settings values
+ */
+void MainWindow::on_settingsTab_tabBarClicked(int index)
+{
+    std::cout<<"index is " << index <<std::endl;
+    switch (index) {
+    case  0:
+        break;
+
+    case 1:
+        break;
+
+    case 2:
+        if (ui->HostNameEntry->text().isEmpty()){
+            ui->HostNameEntry->setText(MYHost);
+        }
+
+        if (ui->DBNameEntry->text().isEmpty()) {
+            ui->DBNameEntry->setText(MYDB);
+        }
+
+        if (ui->UserNameEntry->text().isEmpty()) {
+            ui->UserNameEntry->setText(MYUserName);
+        }
+
+        if  (ui->TableNameEntry->text().isEmpty()) {
+            ui->TableNameEntry->setText(MYTable);
+        }
+
+        if (ui->PasswordEntry->text().isEmpty()) {
+            ui->PasswordEntry->setText(MYPassword);
+        }
+
+        if (SSL) {
+            ui->SSLCheck->setCheckState(Qt::Checked);
+        } else {
+            ui->SSLCheck->setCheckState(Qt::Unchecked);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+
+void MainWindow::on_SettingsLoadButton_clicked()
+{
+    std::cout <<"Clicked load\n"<<endl;
+    /*
+     * here  one would read from the config file and parse it
+     */
+}
+
+
+void MainWindow::on_SettingsSaveButton_clicked()
+{
+    std::cout << "Clicked Save\n" << endl;
+    MYHost = ui->HostNameEntry->text();
+    MYDB = ui->DBNameEntry->text();
+    MYUserName = ui->UserNameEntry->text();
+    MYTable = ui->TableNameEntry->text();
+    MYPassword = ui->PasswordEntry->text();
+    SSL = ui->SSLCheck->checkState();
+
+    /*
+     * here one would write  out the config file.
+     */
 }

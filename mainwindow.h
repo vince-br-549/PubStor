@@ -23,6 +23,13 @@ private slots:
     void addpub();
     void clearpub();
     void searchpub();
+    void settings();
+
+    void on_settingsTab_tabBarClicked(int index);
+
+    void on_SettingsLoadButton_clicked();
+
+    void on_SettingsSaveButton_clicked();
 
 protected:
     void changeEvent(QEvent *e);
