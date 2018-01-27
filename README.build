@@ -8,6 +8,11 @@ So here is an example of how you can make your own build folder....
 
 I didn't include the output from the qmake but it was happy and created everything  needed including the executiable.
 
+Some prereqs:
+
+	qmake-qt5 in Centos 7.4 it is in qt5-qtbase-devel
+
+
 $ cd
 $ cd /tmp
 $ mkdir poo
