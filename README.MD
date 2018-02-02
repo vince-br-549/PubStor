@@ -13,6 +13,8 @@ Probably because my versions are much newer than the one used on the web page.
 Latest updates:
 
 	Added a settings tab to eventually load and save a config file.
+	Added ability to seup and save the users own data base connection particulars.
+
 
 
 Existing Issues not limited to:
@@ -21,15 +23,11 @@ Existing Issues not limited to:
 
 Todo:
 
-o	Add ability to seup and save the users own data base connection particulars.
+	Add support for MySql and SQLite
 
 
 Fixed:
 
-o	The search window only works once. 
-	I think I need to add an additional trigger.
-
-o	I think the add window also only works once.  needs more work
 
 
 Help and Comments welcome

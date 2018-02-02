@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    loadSettings();
 /*
  * build a list of genre for the  combo box
  */
@@ -332,6 +333,22 @@ void MainWindow::loadSettings(){
     /*
      * here  one would read from the config file and parse it
      */
+    QSettings settings("PubStor","dbsetings");
+    settings.beginGroup("network");
+    MYHost = settings.value("hostName",MYHost).toString();
+    MYDB = settings.value("dbName",MYDB).toString();
+    MYTable = settings.value("tableName",MYTable).toString();
+    MYUserName = settings.value("user",MYUserName).toString();
+    MYPassword = settings.value("password",MYPassword).toString();
+    SSL = settings.value("SSL",SSL).toBool();
+    settings.endGroup();
+    ui->HostNameEntry->setText(MYHost);
+    ui->DBNameEntry->setText(MYDB);
+    ui->UserNameEntry->setText(MYUserName);
+    ui->TableNameEntry->setText(MYTable);
+    ui->PasswordEntry->setText(MYPassword);
+    ui->SSLCheck->setChecked(SSL);
+
 }
 
 void MainWindow::on_SettingsSaveButton_clicked()
@@ -348,8 +365,18 @@ void MainWindow::saveSettings(){
     MYPassword = ui->PasswordEntry->text();
     SSL = ui->SSLCheck->checkState();
 
-
     /*
-     * here one would write  out the config file.
+     * write out the config file
      */
+
+    QSettings settings("PubStor","dbsetings");
+    settings.beginGroup("network");
+    settings.setValue("hostName",MYHost);
+    settings.setValue("dbName",MYDB);
+    settings.setValue("tableName",MYTable);
+    settings.setValue("user",MYUserName);
+    settings.setValue("password",MYPassword);
+    settings.setValue("SSL",SSL);
+    settings.endGroup();
+
 }
