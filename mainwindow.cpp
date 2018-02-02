@@ -378,5 +378,5 @@ void MainWindow::saveSettings(){
     settings.setValue("password",MYPassword);
     settings.setValue("SSL",SSL);
     settings.endGroup();
-
+     if ( db.isOpen() ) db.close();  // else the new settings will not be used.
 }
