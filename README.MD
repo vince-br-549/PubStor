@@ -12,8 +12,7 @@ Probably because my versions are much newer than the one used on the web page.
 
 Latest updates:
 
-	Added a settings tab to eventually load and save a config file.
-	Added ability to seup and save the users own data base connection particulars.
+	Added ability to load and save the users own data base connection particulars.
 
 
 
