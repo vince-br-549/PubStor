@@ -9,6 +9,7 @@
 #include <QSqlError>
 #include <QMessageBox>
 #include <QSqlResult>
+#include <QSettings>
 
 namespace Ui {
     class MainWindow;
@@ -24,6 +25,9 @@ private slots:
     void clearpub();
     void searchpub();
     void settings();
+
+    void saveSettings();
+    void loadSettings();
 
     void on_settingsTab_tabBarClicked(int index);
 

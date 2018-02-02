@@ -324,22 +324,30 @@ void MainWindow::on_settingsTab_tabBarClicked(int index)
 
 void MainWindow::on_SettingsLoadButton_clicked()
 {
-    std::cout <<"Clicked load\n"<<endl;
+    loadSettings();
+}
+
+void MainWindow::loadSettings(){
+    std::cout <<"Clicked load\n"<<std::endl;
     /*
      * here  one would read from the config file and parse it
      */
 }
 
-
 void MainWindow::on_SettingsSaveButton_clicked()
 {
-    std::cout << "Clicked Save\n" << endl;
+    saveSettings();
+}
+
+void MainWindow::saveSettings(){
+    std::cout << "Clicked Save\n" << std::endl;
     MYHost = ui->HostNameEntry->text();
     MYDB = ui->DBNameEntry->text();
     MYUserName = ui->UserNameEntry->text();
     MYTable = ui->TableNameEntry->text();
     MYPassword = ui->PasswordEntry->text();
     SSL = ui->SSLCheck->checkState();
+
 
     /*
      * here one would write  out the config file.
