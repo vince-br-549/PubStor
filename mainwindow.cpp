@@ -3,7 +3,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+/*
+ * db connect default setttings
+ */
 
+QString MYDBType = "Postgresql";
 QString MYHost = "localhost";
 QString MYDB = "vince";
 QString MYUserName = "vince";
@@ -18,9 +22,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     loadSettings();
-/*
- * build a list of genre for the  combo box
- */
+    /*
+     * build a list of genre for the  combo box
+     */
+
     QStringList genreList=(QStringList()
                            << "Action and Adventure"
                            << "Anthology"
@@ -60,8 +65,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    /*
+     * should be closed already, via the close event
+     */
+    if ( db.isOpen() )
+    {
+        QMessageBox::warning(this,"Warning","Close event failed");
+        std::cout << "Eep: close event didn't work" << std::endl;
+        db.close();
+    }
     delete ui;
-    if ( db.isOpen() ) db.close();
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -71,19 +84,25 @@ void MainWindow::changeEvent(QEvent *e)
     case QEvent::LanguageChange:
         ui->retranslateUi(this);
         break;
+    case QEvent::Close:
+        /*
+         * this doesn't appear to work
+         */
+
+        std::cout << "QEvent close" << std::endl;
+        break;
     default:
         break;
     }
 }
-
 
 bool MainWindow::openDB()
 {
     if (!QSqlDatabase::drivers().contains("QPSQL"))
         QMessageBox::critical(this, "Unable to load database", "The QPSQL driver is required");
 
-    db  = (QSqlDatabase::addDatabase("QPSQL"));
 
+    db  = (QSqlDatabase::addDatabase("QPSQL"));
     db.setHostName(MYHost);
     db.setDatabaseName(MYDB);
     db.setUserName(MYUserName);
@@ -91,7 +110,7 @@ bool MainWindow::openDB()
 
 
     if ( SSL ) {
-     db.setConnectOptions("requiressl=yes");
+        db.setConnectOptions("requiressl=yes");
     }
 
     bool ret = db.open();
@@ -103,60 +122,57 @@ bool MainWindow::openDB()
 
 void MainWindow::addpub()
 {
-    bool ret = false;
-    bool lck = true;
+    /*
+     * add a new entry into database
+     */
 
-    if(!db.isOpen())
+    if( ! db.isOpen())
     {
-        lck = MainWindow::openDB();
+        MainWindow::openDB();
     }
 
-    if( lck )
+    QSqlQuery query;
+    QString args = "INSERT INTO ";
+    args.append(MYTable);
+    args.append("(title,author,publisher,isbn,genre) VALUES (?,?,?,?,?) RETURNING bookid;");
+    query.prepare(args);
+
+    query.addBindValue(ui->title->text());
+    query.addBindValue(ui->author->text());
+    query.addBindValue(ui->publisher->text());
+    query.addBindValue(ui->isbn->text());
+    query.addBindValue(ui->comboBox->currentText());
+
+    /*
+     * will likely not be seen unless response time is very bad
+     */
+    ui->result->setText("Pub is being inserted");
+
+
+    if( ! query.exec())
     {
-        QSqlQuery query;
-        QString args = "INSERT INTO ";
-        args.append(MYTable);
-        args.append("(title,author,publisher,isbn,genre) VALUES (?,?,?,?,?) RETURNING bookid;");
-        query.prepare(args);
-
-        query.addBindValue(ui->title->text());
-        query.addBindValue(ui->author->text());
-        query.addBindValue(ui->publisher->text());
-        query.addBindValue(ui->isbn->text());
-        query.addBindValue(ui->comboBox->currentText());
-
-        ui->result->setText("Pub is being inserted");  // probably only of use if very poor response time.
-
-
-        ret = query.exec();
-
-        if(!ret)
-        {
-            QMessageBox::critical(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
-
-//            QMessageBox::information(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
-            return;
-        }
-        ui->result->setText("record inserted OK");
-
-        /*
-             * this returns the results of the  'returning' phrase
-
-
-            QString lastid = query.lastInsertId().toString();
-            qWarning() << "got another version " << lastid;
-             */
-
-
-        /*
-         * the following bullshit returns the record number
-         */
-
-        query.first();  // query.next() also works.
-        QString what = query.value(0).toString();
-        qWarning() << "got " + what ;
-        QMessageBox::information(this,"returning book Id Method 0",what);
+        QMessageBox::critical(this,"Fail","Insert failed with: \"" + query.lastError().text() + "\"");
+        return;
     }
+
+    ui->result->setText("record inserted OK");
+
+    /*
+     * this returns the results of the  'returning' phrase
+     * QString lastid = query.lastInsertId().toString();
+     * qWarning() << "got another version " << lastid;
+     */
+
+
+    /*
+     * returns the column bookid
+     */
+
+    query.first();  // query.next() also works.
+    QString what = query.value(0).toString();
+    qWarning() << "got " + what ;
+    QMessageBox::information(this,"returning bookid Method 0",what);
+
 }
 
 
@@ -173,7 +189,7 @@ void MainWindow::clearpub()
 void MainWindow::searchpub()
 {
     bool ret = true;
-    ui->searchResults->clear(); // clear previous output
+    //    ui->searchResults->clear(); // clear previous output
     if(!db.isOpen())
     {
         ret = MainWindow::openDB();
@@ -186,10 +202,6 @@ void MainWindow::searchpub()
 
     QString searchOutputLine;
     QString searchSQLString;
-    QSqlQuery query;
-
-    bool searchAnswersFound = false;
-
 
     /*
      * build the search string
@@ -198,44 +210,50 @@ void MainWindow::searchpub()
         searchSQLString = "SELECT * FROM ";
     }
     else {
-       searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
-
+        searchSQLString = "SELECT title,author,isbn,genre,publisher FROM ";
     }
 
     searchSQLString += MYTable;
     searchSQLString += " WHERE ";
     searchSQLString += ui->srcq->currentText();
-    searchSQLString += " LIKE '";
+    searchSQLString += " ILIKE '";
     searchSQLString += ui->search->text();
-    searchSQLString += "%'";
+    searchSQLString += "%' ";
 
     //    searchSQLString += " like % ;"; // syntax error.
     //    searchSQLString += " LIKE  %:what% ;";  // gives error
     //    searchSQLString += " LIKE  '%:what%' ;";  // Fails to find anything.
-    //searchSQLString += " ILIKE  '%:what%' ;";  // Fails to find anything.
+    //    searchSQLString += " ILIKE  '%:what%' ;";  // Fails to find anything.
     //    searchSQLString += " ILIKE  '%?%' ;";  // using addBindValue Fails to find anything
     //    searchSQLString += " ILIKE  %?% ;";  // using addBindValue syntax error.
-
-
-    //searchSQLString += " = :what ;";  //  Works.
-
-
-
-
+    //    searchSQLString += " = :what ;";  //  Works.
     //    qWarning() <<"this is your  last qWarning :)";
 
 
     /*
      * now do the search
-     */
+
 
     QMessageBox mb;
-    //    mb.setText(searchSQLString);
-    //    mb.exec();
+       mb.setText(searchSQLString);
+       mb.exec();
+    */
 
-    query.prepare(searchSQLString);
-    query.addBindValue(ui->search->text());
+    this->model = new QSqlQueryModel();
 
+    this->model->setQuery(searchSQLString,db);   // do the search
+
+
+    if (this->model->lastError().isValid())
+    {
+        QMessageBox::critical(this,"PubStor","Query Failed " + this->model->lastError().text()  );
+    }
+
+    ui->searchResults->setModel(model);  // display the results
+
+    //    query.addBindValue(ui->search->text());
+
+    /*
 
     if( !query.exec() )
     {
@@ -246,9 +264,8 @@ void MainWindow::searchpub()
     }
 
 
-    /*
      * loop thru the results building an output block, there could be many.
-     */
+
     while (query.next()) {
         searchAnswersFound = true;
         searchOutputLine.append(query.value(0).toString());    searchOutputLine +=", ";
@@ -268,21 +285,31 @@ void MainWindow::searchpub()
     {
         ui->searchResults->setText("Nothing found." );
     }
+    */
 
 }
 
 
-void MainWindow::settings(){
-
+void MainWindow::on_search_returnPressed()
+{
+    searchpub();
 }
 
-
-/*
- * Inialize the settings values
- */
 void MainWindow::on_settingsTab_tabBarClicked(int index)
 {
-    std::cout<<"index is " << index <<std::endl;
+
+
+    /*
+     * Inialize the settings values
+     * not convinced this is needed
+     */
+
+    // std::cout<<"index is " << index <<std::endl;
+
+    /*
+     * which tab has been clicked
+     */
+
     switch (index) {
     case  0:
         break;
@@ -291,31 +318,7 @@ void MainWindow::on_settingsTab_tabBarClicked(int index)
         break;
 
     case 2:
-        if (ui->HostNameEntry->text().isEmpty()){
-            ui->HostNameEntry->setText(MYHost);
-        }
-
-        if (ui->DBNameEntry->text().isEmpty()) {
-            ui->DBNameEntry->setText(MYDB);
-        }
-
-        if (ui->UserNameEntry->text().isEmpty()) {
-            ui->UserNameEntry->setText(MYUserName);
-        }
-
-        if  (ui->TableNameEntry->text().isEmpty()) {
-            ui->TableNameEntry->setText(MYTable);
-        }
-
-        if (ui->PasswordEntry->text().isEmpty()) {
-            ui->PasswordEntry->setText(MYPassword);
-        }
-
-        if (SSL) {
-            ui->SSLCheck->setCheckState(Qt::Checked);
-        } else {
-            ui->SSLCheck->setCheckState(Qt::Unchecked);
-        }
+        loadSettings();  // settings tab was clicked
         break;
     default:
         break;
@@ -329,12 +332,13 @@ void MainWindow::on_SettingsLoadButton_clicked()
 }
 
 void MainWindow::loadSettings(){
-    std::cout <<"Clicked load\n"<<std::endl;
     /*
-     * here  one would read from the config file and parse it
+     * setup the config file
      */
+
     QSettings settings("PubStor","dbsetings");
     settings.beginGroup("network");
+    MYDBType = settings.value("PostGresql",MYDBType).toString();
     MYHost = settings.value("hostName",MYHost).toString();
     MYDB = settings.value("dbName",MYDB).toString();
     MYTable = settings.value("tableName",MYTable).toString();
@@ -342,6 +346,11 @@ void MainWindow::loadSettings(){
     MYPassword = settings.value("password",MYPassword).toString();
     SSL = settings.value("SSL",SSL).toBool();
     settings.endGroup();
+
+    /*
+     * display the results of the settings, either the defaultvalues or those read
+     */
+
     ui->HostNameEntry->setText(MYHost);
     ui->DBNameEntry->setText(MYDB);
     ui->UserNameEntry->setText(MYUserName);
@@ -357,7 +366,12 @@ void MainWindow::on_SettingsSaveButton_clicked()
 }
 
 void MainWindow::saveSettings(){
-    std::cout << "Clicked Save\n" << std::endl;
+
+    /*
+     * get the changes wrought
+     */
+
+    // MYDBType =
     MYHost = ui->HostNameEntry->text();
     MYDB = ui->DBNameEntry->text();
     MYUserName = ui->UserNameEntry->text();
@@ -371,6 +385,7 @@ void MainWindow::saveSettings(){
 
     QSettings settings("PubStor","dbsetings");
     settings.beginGroup("network");
+    settings.setValue("DBType",MYDBType);
     settings.setValue("hostName",MYHost);
     settings.setValue("dbName",MYDB);
     settings.setValue("tableName",MYTable);
@@ -378,5 +393,34 @@ void MainWindow::saveSettings(){
     settings.setValue("password",MYPassword);
     settings.setValue("SSL",SSL);
     settings.endGroup();
-     if ( db.isOpen() ) db.close();  // else the new settings will not be used.
+
+    if ( db.isOpen() ) db.close();  // else the new settings will not be used.
+    /*
+     * hopefully this will see if any of the open params are bad
+     */
+
+    openDB();
+}
+
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    db.close();
+    if (event ) {
+        // just suppress unused warning
+    }
+    //std::cout << "OK bye" << std::endl;
+
+    /*
+     * fun with intercepting the close button
+    QMessageBox::StandardButton resBtn = QMessageBox::question( this, "PubStor",
+                                                                    tr("Quit: Are you sure?\n"),
+                                                                    QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                                                    QMessageBox::Yes);
+        if (resBtn != QMessageBox::Yes) {
+            event->ignore();
+        } else {
+            event->accept();
+        }
+        */
 }
