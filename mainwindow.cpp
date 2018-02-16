@@ -216,9 +216,11 @@ void MainWindow::searchpub()
     searchSQLString += MYTable;
     searchSQLString += " WHERE ";
     searchSQLString += ui->srcq->currentText();
-    searchSQLString += " ILIKE '";
+    searchSQLString += " ILIKE '%";
     searchSQLString += ui->search->text();
     searchSQLString += "%' ";
+    searchSQLString += "ORDER BY ";
+    searchSQLString += ui->srcq->currentText();
 
     //    searchSQLString += " like % ;"; // syntax error.
     //    searchSQLString += " LIKE  %:what% ;";  // gives error
